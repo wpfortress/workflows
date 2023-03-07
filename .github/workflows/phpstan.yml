@@ -1,0 +1,32 @@
+name: phpstan
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        description: The PHP version to setup and use.
+        type: string
+        required: false
+        default: 8.1
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v2
+
+      - name: Execute phpstan
+        run: vendor/bin/phpstan analyse --error-format=github
