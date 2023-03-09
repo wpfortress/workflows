@@ -1,0 +1,50 @@
+name: phpunit
+
+on:
+  workflow_call:
+    inputs:
+      php-versions:
+        description: The PHP versions to setup and use.
+        type: string
+        required: false
+        default: '["8.1"]'
+      composer-dependency-versions:
+        description: The Composer dependency version constraints.
+        type: string
+        required: false
+        default: '["locked"]'
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php-version: ${{ fromJson(inputs.php-versions) }}
+        composer-dependency-version: ${{ fromJson(inputs.composer-dependency-versions) }}
+
+    name: PHP ${{ matrix.php-version }} - ${{ matrix.composer-dependency-version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup problem matchers
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v2
+        with:
+          dependency-versions: ${{ matrix.composer-dependency-version }}
+
+      - name: Execute phpunit
+        run: vendor/bin/phpunit
